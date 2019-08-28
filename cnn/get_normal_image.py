@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
-import time
+'''
+在有标注的svs大图中截取2048x1536的normal类别大图
+截取的标准是该大图的上下左右以及中心坐标都不在标注区域内
+'''
 import openslide as opsl
 import os
 import numpy as np
 import cv2
 from utils1 import point_polygon_utils as p
-#import get_preview_2
 import xml.etree.ElementTree as ET
 from skimage import io
-#from PIL import ImageDraw
-#import gc
 
-
-
+'''
+输入：
+    vertex_list:xml文件中的坐标
+    level_downsample:需要把坐标下采样的倍数。不需要下采样则设为1
+输出：
+    vertexs：取出的坐标列表。
+'''
 def get_vertex(vertex_list, level_downsample):
     vertexs = []
     for _, vertex in enumerate(vertex_list):
@@ -23,6 +28,9 @@ def get_vertex(vertex_list, level_downsample):
         #vertexs.append((int(float(vertex['X'])/level_downsample), int(float(vertex['Y'])/level_downsample)))
     return vertexs
 
+'''
+获得所需区域的坐标
+'''
 def get_regions( xml_file):
     try:
         tree = ET.parse(xml_file)
@@ -48,17 +56,17 @@ def get_regions( xml_file):
         
     return regions_list
 
+'''
+center:坐标点
+regions：一个或多个区域的坐标列表
+判断坐标是否位于区域中，只要坐标位于一个区域内，就退出循环，直接返回true。
+坐标不在所有的区域里面才返回false
+'''
 def position(center,regions):
-#    center = (int(x0 + img_w_size/2),int(y0 + img_h_size/2))
-#    center =(x, y)
-#    if (regions):
     for i in range(len(regions)):
         flag,dis = p.point_position(center,regions[i])
-        #print(flag,dis)
         if (flag == True):
-            #print(center)
             break
-#    else:return False
     return flag
         
 
@@ -66,31 +74,19 @@ def position(center,regions):
 
 #base_data_file = '/cptjack/totem/Data 05272019/Yatong/xml_new_full'  
 base_data_file = '/cptjack/totem/Colon Pathology/openslide_test/ICIAR2018_BACH_Challenge/Train/WSI/A_'
-#xml_file = '/cptjack/totem/Data 05272019/Yatong/xml_new_full'
-pre_heat = '/cptjack/totem/yatong/breast_predict/result/preview_heatmap_result'
-#heatmap = '/cptjack/totem/yatong/breast_predict/result/result_heatmap'   
+pre_heat = '/cptjack/totem/yatong/breast_predict/result/preview_heatmap_result' 
 heatmap='/cptjack/totem/yatong/breast_predict/result/FPtrain_Xception_2/result_heatmap'
 result_dir = '/cptjack/totem/yatong/4_classes/normal_image/image/'
 heatmap_dir = '/cptjack/totem/yatong/4_classes/normal_image/heatmap/'
-#pre_heat = os.listdir(pre_heat_file )
-#heatmap = os.listdir(heatmap_file)
 base_data = os.listdir(base_data_file)
-#data = [base_data, pre_heat, heatmap]
 for base_file in base_data:
     if base_file.split('.')[-1] == 'svs':
         print(base_file)
         name = base_file.split('.')[-2]
-        #svs_file = name + '.svs'
         xml_name = name + '.xml'
-#        pre_heat_name = name + '_preHeatResult.jpg'
-#        heatmap_name = name + '_heatmap.png'
-#        pre_heat_file = os.path.sep.join([pre_heat, pre_heat_name])
-#        heatmap_file = os.path.sep.join([heatmap, heatmap_name])
         svs_file_path = os.path.sep.join([base_data_file, base_file])
         xml_file = os.path.sep.join([base_data_file, xml_name])
-        #print(base_file, '\n',xml_file, '\n', pre_heat_file, '\n', heatmap_file)
         slide = opsl.OpenSlide(svs_file_path)
-#        step = 800
         step_x = 2048
         step_y = 1536
         livel = 2
@@ -120,7 +116,8 @@ for base_file in base_data:
                     x1, y1 = x0 + step_x, y0
                     x2, y2 = x0, y0 + step_y
                     x3, y3 = x0 + step_x, y0 + step_y
-                    coordinate = [(x0, y0), (x1, y1), (x2, y2), (x3, y3)]
+                    cx, cy = x0 + 1024, y0 + 786
+                    coordinate = [(x0, y0), (x1, y1), (x2, y2), (x3, y3), (cx,cy)]
                     i = i + 1
                     for center in coordinate:
                         flag = position(center,regions)
@@ -132,11 +129,6 @@ for base_file in base_data:
                         out_img[y, x] = 255
                         io.imsave(result_dir + name +'_n_' +str(i) + '.tif', slide_img1)
                         
-#                        else:
-##                            i = i + 1
-#                            print(flag)
-#                            out_img[y, x] = 255
-#                            io.imsave(result_dir + name +'_n_' +str(i) + '.tif', slide_img1)
         out_img = cv2.resize(out_img, (int(w_count * step_x /Ds[livel,0]), int(h_count * step_y /Ds[livel,0])), interpolation=cv2.INTER_AREA)
         out_img = cv2.copyMakeBorder(out_img,0,int(Wh[livel,1]-out_img.shape[0]),0,int(Wh[livel,0]-out_img.shape[1]),cv2.BORDER_REPLICATE)
         out_img  = np.uint8(out_img)

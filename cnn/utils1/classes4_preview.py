@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
+'''
+根据bach challenge提供的svs图片对应的xml文件给svs图片画标注
+-->在二级缩略图下画标注
+'''
 import xml.etree.ElementTree as ET
 import openslide as opsl
-from PIL import Image, ImageDraw
-import numpy as np
-import cv2
-import os
-from imutils import paths
-from skimage import io
+from PIL import ImageDraw
 
 
+'''
+输入：
+    vertex_list:xml文件中的坐标
+    level_downsample:需要把坐标下采样的倍数。不需要下采样则设为1
+输出：
+    vertexs：取出的坐标列表。
+'''
 def get_vertex(vertex_list, level_downsample):
     
     vertexs = []
@@ -16,28 +22,30 @@ def get_vertex(vertex_list, level_downsample):
         
         x = int(float(vertex['X'])/level_downsample)
         y = int(float(vertex['Y'])/level_downsample)
-#        x = int(float(vertex['X']))
-#        y = int(float(vertex['Y']))
         vertexs.append((x,y))
     #print(vertexs)
         #vertexs.append((int(float(vertex['X'])/level_downsample), int(float(vertex['Y'])/level_downsample)))
     return vertexs
 
+'''
+svs_file:需要画标注的svs图片保存路径
+xml_file:svs图片对应的xml文件保存路径
+'''
 def get_preview(svs_file, xml_file):
     slide = opsl.OpenSlide(svs_file)
+    #下采样到二级的下采样背书
     level_downsample = slide.level_downsamples[2]
     level_dimension = slide.level_dimensions[2]
+    #二级缩略图
     thumbnail = slide.get_thumbnail(level_dimension)
     slide.close()
     
-    dr = ImageDraw.Draw(thumbnail)
-    
+    dr = ImageDraw.Draw(thumbnail)  
     try:
         tree = ET.parse(xml_file)
     except:
         return []
     else:
-#        regions_list = []
         regions_attrib = []
         i = 0
         
@@ -85,17 +93,3 @@ def get_preview(svs_file, xml_file):
         
     return thumbnail
 
-#base_data = '/cptjack/totem/Colon Pathology/openslide_test/ICIAR2018_BACH_Challenge/Train/WSI/A_'
-#base_data_files = os.listdir(base_data)
-##base_data_paths = list(paths.list_images(base_data))
-#print(base_data_files)
-#result_dir = '/cptjack/totem/yatong/bach_challenge/result/4_classes_preview/'
-#for p in base_data_files:
-#    n = p.split('.')[-2]
-#    if p.split('.')[-1] == 'svs':
-#        xml_file = n + '.xml'
-#        xml_path = os.path.sep.join([base_data, xml_file])
-#        svs_path = os.path.sep.join([base_data, p])
-#        preview = get_preview(svs_path, xml_path)
-#        io.imsave(result_dir + n + '.png', preview)
-#    else:continue

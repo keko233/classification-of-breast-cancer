@@ -71,48 +71,45 @@ def get_out_img(model, svs_file_path,name):
     out_img1 = cv2.resize(out_img1, (int(w_count * step1 /Ds[livel,0]), int(h_count * step1 /Ds[livel,0])), interpolation=cv2.INTER_AREA)
     out_img1 = cv2.copyMakeBorder(out_img1,0,int(Wh[livel,1]-out_img1.shape[0]),0,int(Wh[livel,0]-out_img1.shape[1]),cv2.BORDER_REPLICATE)
     out_img1  = np.uint8(out_img1)
-    return out_img, out_img1
-
-#####         
-if __name__ == '__main__':  
-    model_path = '/cptjack/totem/yatong/4_classes/new_mil_resnet50_0813/3_resnet50(224).h5'
-    save_base_path = '/cptjack/totem/yatong/4_classes/cnn_result/4_classes_predict_result/mil_resnet50_newhsv_0813/epoch3'   
+    return out_img, out_img1 
+'''
+model_path:用于预测的模型保存路径
+data_dir：保存所有svs文件以及xml文件的路径
+save_base_dir：保存生成结果图片的路径
+map_name: 四分类结果矩阵图片的前缀名
+iv_map_name：只保存invasive（即第4类，label为3）预测概率的结果矩阵图片的前缀名
+colormap_title:热图的标题名字
+'''    
+def predict_svs(model_path, data_dir, save_base_dir, map_name, iv_map_name, colormap_title):       
     model = load_model(model_path)
-
-    
-#    base_data_file = '/cptjack/totem/Data 05272019/Yatong/xml_new_full'
-    base_data_file = '/cptjack/totem/Colon Pathology/openslide_test/ICIAR2018_BACH_Challenge/Train/WSI/A_'
-    base_data = os.listdir(base_data_file)
-    result_map_dir = os.path.sep.join([save_base_path, 'result_map'])
+    data = os.listdir(data_dir)
+    result_map_dir = os.path.sep.join([save_base_dir, 'result_map'])
     if not os.path.exists(result_map_dir):os.makedirs(result_map_dir)
-    iv_result_map_dir = os.path.sep.join([save_base_path, 'iv_result_map'])
+    iv_result_map_dir = os.path.sep.join([save_base_dir, 'iv_result_map'])
     if not os.path.exists(iv_result_map_dir):os.makedirs(iv_result_map_dir)
 
-    for base_file in base_data:
-        if base_file.split('.')[-1] == 'svs':
-            l = base_file.split('/')[-1]
-            f = l.split('.')[-2]
-            print(f)
-            name = base_file.split('.')[-2]
-            print(base_file)
+    for file in data:
+        if file.split('.')[-1] == 'svs':
+            name = file.split('.')[-2]
+#            print(file)
             xml_name = name + '.xml'        
-            svs_file = os.path.sep.join([base_data_file, base_file])
-            print(svs_file)
-            xml_file = os.path.sep.join([base_data_file, xml_name]) 
-            map_name = name +'_mil_epoch3_resnet50_newhsv_0813_map.png'
-            map_path = os.path.sep.join([result_map_dir,map_name])
+            svs_file = os.path.sep.join([data_dir, file])
+#            print(svs_file)
+            xml_file = os.path.sep.join([data_dir, xml_name]) 
+            map_name2 = name + map_name
+            map_path = os.path.sep.join([result_map_dir,map_name2])
             
-            iv_map_name = name + 'iv_mil_epoch3_resnet50_newhsv_0813_map.png'
-            iv_map_path = os.path.sep.join([iv_result_map_dir,iv_map_name])
+            iv_map_name2 = name + iv_map_name
+            iv_map_path = os.path.sep.join([iv_result_map_dir,iv_map_name2])
             
             out_img, out_img1 = get_out_img(model,svs_file,name)
             pre_img = preview_3.get_preview(svs_file, xml_file)
        
-            colormap_dir = os.path.sep.join([save_base_path, 'colormap'])
-            colormap_dir2 = os.path.sep.join([save_base_path, 'invasive_colormap'])
+            colormap_dir = os.path.sep.join([save_base_dir, 'colormap'])
+            colormap_dir2 = os.path.sep.join([save_base_dir, 'invasive_colormap'])
             if not os.path.exists(colormap_dir):os.makedirs(colormap_dir)
 
-            title = name + '_mil_epoch3_resnet50_newhsv_0813' +'_colormap'
+            title = name + colormap_title
             colormap.create_colormap(pre_img, out_img, title,  colormap_dir)
             colormap.create_colormap(pre_img, out_img1, title,  colormap_dir2)
                
@@ -120,3 +117,13 @@ if __name__ == '__main__':
             cv2.imwrite(iv_map_path, out_img1)
             del out_img, pre_img, out_img1
             gc.collect()
+    return
+
+model_path = '/cptjack/totem/yatong/4_classes/new_mil_resnet50_0813/3_resnet50(224).h5'
+save_base_dir = '/cptjack/totem/yatong/4_classes/cnn_result/4_classes_predict_result/mil_resnet50_newhsv_0813/epoch3'   
+data_dir = '/cptjack/totem/Colon Pathology/openslide_test/ICIAR2018_BACH_Challenge/Train/WSI/A_'
+map_name = '_mil_epoch3_resnet50_newhsv_0813_map.png'
+iv_map_name = 'iv_mil_epoch3_resnet50_newhsv_0813_map.png'
+colormap_title = '_mil_epoch3_resnet50_newhsv_0813_colormap'
+
+predict_svs(model_path, data_dir, save_base_dir, map_name, iv_map_name, colormap_title)

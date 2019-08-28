@@ -1,56 +1,35 @@
 # -*- coding: utf-8 -*-
-from keras.models import load_model
-#from utils import metrics
-from utils1 import generators
 
 
-#from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import CSVLogger, Callback, EarlyStopping
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler,ReduceLROnPlateau
-from keras.callbacks import TensorBoard
-from keras.optimizers import Adagrad, SGD
-from keras.utils import to_categorical
-from keras.applications import resnet50
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
-from imutils import paths
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-from keras import regularizers
-from keras.utils.vis_utils import plot_model
+from keras import ImageDataGenerator
 from keras.models import Sequential
+from keras.models import load_model
+from keras.callbacks import CSVLogger,  EarlyStopping
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import TensorBoard
+from keras.optimizers import SGD
+from keras.layers.core import Dense, Flatten, Dropout 
+from keras import regularizers
 
-from keras.layers.convolutional import  MaxPooling2D, AveragePooling2D
-from keras.layers.normalization import BatchNormalization
-from keras.layers.core import Activation, Dense, Flatten, Dropout 
-import random
-#from keras.models import Model, Input
-#from keras.optimizers import Adam
-#from keras.callbacks import ModelCheckpoint
+from imutils import paths
 import time
-#from generators import DataGenerator
+import os
 
 
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
+
 file_path = '/cptjack/sys_software_bak/tensorflow_keras_models/models/resnet50(224).h5'
 #file_path = '/cptjack/sys_software_bak/tensorflow_keras_models/models/InceptionResnetV2(224).h5'
-#
+
 base_model = load_model(file_path)
 base_model.summary()
-#plot_model(base_model, to_file='model1.png', show_shapes=True)
 model = Sequential()
 model.add(base_model)
-#top_model.add(BatchNormalization())
-#top_model.add(MaxPooling2D(pool_size=(2,2)))
 model.add(Flatten())
 
-#top_model.add(Dense(16,activation='relu',kernel_initializer='he_normal',
-#                    kernel_regularizer=regularizers.l2(0.01)))
-#top_model.add(Dense(16,activation='relu',kernel_initializer='he_normal'))
 model.add(Dense(32,activation='relu',kernel_initializer='he_normal',
                     kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
@@ -60,35 +39,20 @@ model.summary()
 
 for layer in model.layers:
     layer.trainable = True
-    
-#model_path = '/cptjack/totem/yatong/4_classes/inceResV2_0806_2/InceptionResnetV2(224).h5'
-#model = load_model(model_path)
-##
-#model.summary()
 
-
-#for layer in model.layers:
-#    layer.trainable = True
-
-
+#超参数设置    
 num_epochs = 30
 init_lr = 1e-2
 bs = 32
 
-#train_dir = '/cptjack/totem/yatong/all_data/balance_normalized_dataset_512/train'
-#val_dir = '/cptjack/totem/yatong/all_data/balance_normalized_dataset_512/validation'
-#train_dir = '/cptjack/totem/yatong/all_data/bach_augment_data_512/train'
-#val_dir = '/cptjack/totem/yatong/all_data/bach_augment_data_512/validation'
-#train_dir = '/cptjack/totem/yatong/all_data/mil_new_512/train'
+#训练集以及验证集路径
 val_dir = '/cptjack/totem/yatong/all_data/val'
 train_dir = '/cptjack/totem/yatong/all_data/new_hsv_augment_data_512/train'
-#train_dir ='/cptjack/totem/yatong/all_data/mil_data_512/train'
-#val_dir = '/cptjack/totem/yatong/all_data/val'
-#train_path = config2.train_dir
+
 opt = SGD(lr=init_lr, decay=init_lr/num_epochs, 
                      momentum=0.9, nesterov=True)
 
-#opt = Adagrad(lr=init_lr, decay=init_lr / num_epochs)
+
 model.compile(loss = "weight_categorical_crossentropy", optimizer = opt,
                   metrics = ["accuracy"])
 #top_model.compile(loss="categorical_crossentropy", optimizer=opt,
@@ -96,32 +60,15 @@ model.compile(loss = "weight_categorical_crossentropy", optimizer = opt,
 #              )
 
 trainPaths = list(paths.list_images(train_dir))
-random.seed(40)
-random.shuffle(trainPaths)
-#trainPaths = list(paths.list_images(new_train.creat_train_dir))
 totalTrain = len(trainPaths)
 totalVal = len(list(paths.list_images(val_dir)))
-#totalTest = len(list(paths.list_images(test_dir)))
 
-#trainLabels = [int(p.split(os.path.sep)[-2]) for p in trainPaths]
-#print(trainLabels[:3])
-#trainLabels = to_categorical(trainLabels)
-#print(trainLabels[:3])
-#classTotals = trainLabels.sum(axis = 0)
-#classWeight = classTotals.max()/classTotals
+trainAug = ImageDataGenerator(rescale=1/255.0,
+                              horizontal_flip=True,
+                              vertical_flip=True,
+                              zoom_range = 0.2)
 
-trainAug = generators.DataGenerator(rescale=1/255.0)
-                           #         rotation_range=20,
-#                              width_shift_range=0.1,
-#                              height_shift_range=0.1,
-#                              shear_range=0.05,
-#                              horizontal_flip=True,
-#                              vertical_flip=True,
-#                              zoom_range = 0.2,
-#                              stain_transformation = True,
-#                              fill_mode="nearest")
-
-valAug = generators.DataGenerator(rescale=1/255.0)
+valAug = ImageDataGenerator(rescale=1/255.0)
 
 trainGen = trainAug.flow_from_directory(train_dir,
                                         class_mode="categorical",
@@ -167,8 +114,7 @@ def get_callbacks(filepath,model,patience):
 #file = 'InceptionResnetV2(224)'
 file = 'resnet50'
 callbacks_s = get_callbacks(file,model,patience=10)
-#early_stopping = EarlyStopping(monitor='val_loss', patience=50, verbose=2, mode='min')
-H = model.fit_generator(trainGen,
+model.fit_generator(trainGen,
                         steps_per_epoch=totalTrain // bs,
                         validation_data=valGen,
                         validation_steps=totalVal // bs,
@@ -177,26 +123,7 @@ H = model.fit_generator(trainGen,
                         callbacks=callbacks_s,
                         verbose=1)
 
-#print("[info] evaluating network..")
-#testGen.reset()
-#predIdxs = top_model.predict_generator(testGen,
-#                                   steps=(totalTest // bs) + 1)
-#
-#predIdxs = np.argmax(predIdxs, axis=1)
-#
-#print(classification_report(testGen.classes, predIdxs, 
-#                            target_names=testGen.class_indices.keys()))
-#
-#cm = confusion_matrix(testGen.classes, predIdxs)
-#total = sum(sum(cm))
-#acc = (cm[0,0] + cm[1,1]) / total
-#sensitivity = cm[0,0] / (cm[0,0] + cm[0,1])
-#specificity = cm[1,1] / (cm[1,0] + cm[1,1])
-#
-#print(cm)
-#print("acc:{:.4f}".format(acc))
-#print("sensitivity:{:.4f}".format(sensitivity))
-#print("specificity:{:.4f}".format(specificity))
+
 
 
 

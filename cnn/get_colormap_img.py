@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
-
-
+'''
+生成热图
+'''
 import cv2
 import os
 import numpy as np
-from PIL import Image
 import matplotlib.pyplot as plt
-import matplotlib
+'''
+svs_im: svs的二级缩略图
+matrix_0: svs图的预测结果矩阵
+title：热图的标题
+output_dir：存放生成热图的路径
+'''
 
 def create_colormap(svs_im, matrix_0, title, output_dir):
     plt_size = (svs_im.size[0] // 100, svs_im.size[1] //100)
@@ -27,22 +32,6 @@ def create_colormap(svs_im, matrix_0, title, output_dir):
     plt.close('all')
     return
 
-#out_img_dir = '/cptjack/totem/yatong/breast_predict/result/result_map'
-#preview_img_dir = '/cptjack/totem/yatong/breast_predict/preview'
-#preview_img_files = os.listdir(preview_img_dir)
-##out_img_files = os.listdir(out_img_path)
-#colormap_dir = '/cptjack/totem/yatong/breast_predict/result/colormap'
-
-#for filename in preview_img_files:
-#    name = filename.split('_')
-#    out_img_filename = name[0] + '_' + name[1] + '_' + 'map.png'
-#    title = name[0] + '_' + name[1] + '_' + 'colormap'
-#    preview_img_path = os.path.sep.join([preview_img_dir, filename])
-#    out_img_path = os.path.sep.join([out_img_dir, out_img_filename])
-#    preview_file = Image.open(preview_img_path)
-#    out_img_file = matplotlib.image.imread(out_img_path)
-#   # print(out_img_file)
-#    create_colormap(preview_file, out_img_file, title,  colormap_dir)
 
 
 

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+'''
+'/cptjack/totem/Data 05272019/Yatong/xml_new_full' 文件夹中的数据对应的画svs图片标注程序
+'''
 import xml.etree.ElementTree as ET
 import openslide as opsl
 from PIL import Image, ImageDraw
@@ -7,7 +9,13 @@ import numpy as np
 import cv2
 import os
 
-
+'''
+输入：
+    vertex_list:xml文件中的坐标
+    level_downsample:需要把坐标下采样的倍数。不需要下采样则设为1
+输出：
+    vertexs：取出的坐标列表。
+'''
 def get_vertex(vertex_list, level_downsample):
     
     vertexs = []
@@ -15,13 +23,15 @@ def get_vertex(vertex_list, level_downsample):
         
         x = int(float(vertex['X'])/level_downsample)
         y = int(float(vertex['Y'])/level_downsample)
-#        x = int(float(vertex['X']))
-#        y = int(float(vertex['Y']))
         vertexs.append((x,y))
     #print(vertexs)
         #vertexs.append((int(float(vertex['X'])/level_downsample), int(float(vertex['Y'])/level_downsample)))
     return vertexs
 
+'''
+svs_file:需要画标注的svs图片保存路径
+xml_file:svs图片对应的xml文件保存路径
+'''
 def get_preview(svs_file, xml_file):
     slide = opsl.OpenSlide(svs_file)
     level_downsample = slide.level_downsamples[2]

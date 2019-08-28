@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 from keras.callbacks import CSVLogger, EarlyStopping
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint,  ReduceLROnPlateau
 from keras.callbacks import TensorBoard
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.layers import Embedding
+from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Bidirectional
 from keras.optimizers import SGD
@@ -14,7 +13,6 @@ import numpy as np
 import os
 import time
 import random
-from utils1 import generators
 
 os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 gpu_options=tf.GPUOptions(allow_growth=True)
@@ -27,60 +25,46 @@ num_epochs = 100
 init_lr = 1e-3
 
 save_dir ='/cptjack/totem/yatong/4_classes/lstm_data'
-#
-#train_data = np.load(save_dir + '/train_data(resnet50_0725).npy')
-#train_labels = np.load(save_dir + '/train_labels(resnet50_0725).npy')
+
+
 train_data = np.load(save_dir + '/train_data(inceptionResnetV2_0806_3).npy')
 train_labels = np.load(save_dir + '/train_labels(inceptionResnetV2_0806_3).npy')
-#train = list(zip(train_data, train_labels))
-#print(len(train))
-#random.seed(62)
-#random.shuffle(train)
-#train_data, train_labels = zip(*train)
-#train_data = np.array(train_data)
+
+#将训练集的标签进行ong-hot编码
 train_labels = to_categorical(train_labels)
 
-#val_data = np.load(save_dir + '/val_data(1536 efficient).npy')
-#val_labels = np.load(save_dir + '/val_labels(1536 efficient).npy')
-#val_data = np.load(save_dir + '/val_data(resnet50_0725).npy')
-#val_labels = np.load(save_dir + '/val_labels(resnet50_0725).npy')
+trainTotals = len(train_data)
+#打乱训练集
+train = list(zip(train_data, train_labels))
+print(len(train))
+random.seed(62)
+random.shuffle(train)
+train_data, train_labels = zip(*train)
+
 val_data = np.load(save_dir + '/val_data(inceptionResnetV2_0806_3).npy')
 val_labels = np.load(save_dir + '/val_labels(inceptionResnetV2_0806_3).npy')
 val_labels = to_categorical(val_labels)
 val = (val_data, val_labels)
 valTotals = len(val_data)
 
-train_data = list(train_data) + list(val_data)
-train_labels = list(train_labels) + list(val_labels)
-trainTotals = len(train_data)
-train = list(zip(train_data, train_labels))
-print(len(train))
-random.seed(62)
-random.shuffle(train)
-train_data, train_labels = zip(*train)
+
 train_data = np.array(train_data) 
 train_labels = np.array(train_labels)
+val_data = np.array(val_data)
+val_labels = np.array(val_labels)
+
 classTotals = train_labels.sum(axis = 0)
-print(classTotals)
+
+#获得各个类的比例
 classWeight = classTotals.max() / classTotals
 print(classWeight)
 
 
 
-#lstm_model = Sequential()
-##model = model.add(LSTM(32, return_sequences = True,input_shape = (timesteps,data_dim)))
-#lstm_model.add(LSTM(32, return_sequences = True,input_shape = (train_data.shape[1], train_data.shape[2])))
-#lstm_model.add(LSTM(32,return_sequences = True))
-#lstm_model.add(LSTM(32,return_sequences = True))
-#lstm_model.add(LSTM(32,return_sequences = False))
-#lstm_model.add(Dense(2, activation = 'softmax'))
-#lstm_model.summary()
-
 lstm_model = Sequential()
-#model = model.add(LSTM(32, return_sequences = True,input_shape = (timesteps,data_dim)))
 lstm_model.add(Bidirectional(LSTM(256, return_sequences = True),input_shape = (train_data.shape[1], train_data.shape[2])))
-#lstm_model.add(Bidirectional(LSTM(256,return_sequences = True)))
-#lstm_model.add(Bidirectional(LSTM(256,return_sequences = True)))
+lstm_model.add(Bidirectional(LSTM(256,return_sequences = True)))
+lstm_model.add(Bidirectional(LSTM(256,return_sequences = True)))
 lstm_model.add(Bidirectional(LSTM(256,return_sequences = False)))
 lstm_model.add(Dense(4, activation = 'softmax'))
 lstm_model.summary()
@@ -124,6 +108,7 @@ def get_callbacks(filepath,model,patience):
 file = 'lstm_2'
 callbacks_s = get_callbacks(file,lstm_model,patience=50)
 
+#一次性读取所有数据训练
 H = lstm_model.fit(train_data, train_labels,
               epochs = num_epochs,
               validation_data = val,
@@ -140,13 +125,7 @@ H = lstm_model.fit(train_data, train_labels,
 #              validation_steps = valTotals // bs,
 #              callbacks = callbacks_s, verbose = 1)
 
-#H = model.fit(t, l, batch_size = 1,
-#              epochs = num_epochs,
-#              validation_data = v,
-#              
-#              steps_per_epoch = tt // bs,
-#              validation_steps = vv // bs,
-#              callbacks = callbacks_s, verbose = 1)
+
 
 
 

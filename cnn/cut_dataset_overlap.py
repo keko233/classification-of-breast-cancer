@@ -3,17 +3,22 @@ from PIL import Image
 import numpy as np
 from skimage import io
 
-
-def cut_img(file, save_dir):
-
+'''
+有重叠的将2048x1536的图片切成512x512的patch， 重叠部分为512
+file：要切割的单张大图保存路径
+save_dir:切图得到的patch的保存路径
+'''
+def cut_img_overlap(file, save_dir):
     f = file.split('/')[-1]
     f_name = f.split('.')[-2]
     img = Image.open(file)
     img = np.asarray(img)
+    
+    #step为patch的大小
+    #step2为重叠大小
     step = 512
     step2 = 256
 #    print(img.shape)
-
     h_count = ((img.shape[0] - step) // step2 ) + 1
     w_count = ((img.shape[1] - step) // step2 ) + 1
     i = 0 
@@ -39,7 +44,7 @@ save_dir：保存处理后图片的路径
 '''
 def get_dataset(Paths,save_dir):
     for file in Paths:
-        cut_img(file, save_dir)
+        cut_img_overlap(file, save_dir)
     return
 
 
