@@ -59,6 +59,11 @@ using different way to classify 4 classes about breast cancer
 
 ##### /predict/ 存放预测图片的脚本
 - cnn_predict_svs: cnn模型预测svs大图并得到结果矩阵以及热图
-- lstm_predict_svs: lstm模型预测svs大图并得到结果矩阵以及热图
-- predict_bach_testdata: 预测bach challeng中的100张测试图片并打印预测结果
-- predict_get_false_pathch: 预测切割好且知道标签的512x512patch，并保存预测错误的样本名
+- lstm_predict_svs:lstm模型预测svs大图并得到结果矩阵以及热图
+- predict_bach_testdata:预测bach challeng中的100张测试图片并打印预测结果
+- predict_get_false_pathch:预测切割好且知道标签的512x512patch，并保存预测错误的样本名
+- get_img_lstm_predict_result：获得单张2048x1536图的cnn+lstm模型的预测结果
+
+##### /cnn+lstm/ 存放lstm模型相关脚本
+- get_cnn_feature: 获得cnn特征用于lstm训练
+- train_lstm: 训练lstm模型
