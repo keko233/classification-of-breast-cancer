@@ -3,7 +3,7 @@
 将2048x1536图片切割为9张512x512的patch
 按顺序提取patch的cnn瓶颈特征，将提取得到的9维cnn特征作为对应2048x1536图片的特征
 '''
-from utils1 import get_img_data as g
+from utils import get_img_data as g
 import tensorflow as tf
 from imutils import paths
 import numpy as np

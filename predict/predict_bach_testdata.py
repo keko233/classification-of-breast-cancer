@@ -7,11 +7,8 @@
 3、投票计算一张2048x1536图片中的patch被预测为最多的label是哪个，该label为这张大图的label
 """
 
-from imutils import paths
 import numpy as np
 import cv2
-from PIL import Image 
-from keras.models import Model
 from keras.models import load_model
 import os
 from skimage import io

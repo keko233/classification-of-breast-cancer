@@ -3,8 +3,8 @@
 lstm模型预测svs图片
 '''
 from __future__ import division
-from utils1 import classes4_preview as preview_3
-import get_colormap_img as colormap
+from utils import classes4_preview as preview_3
+from utils import get_colormap_img as colormap
 import openslide as opsl
 import numpy as np
 import cv2

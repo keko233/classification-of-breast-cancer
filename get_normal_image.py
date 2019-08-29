@@ -7,7 +7,7 @@ import openslide as opsl
 import os
 import numpy as np
 import cv2
-from utils1 import point_polygon_utils as p
+from utils import point_polygon_utils as p
 import xml.etree.ElementTree as ET
 from skimage import io
 
